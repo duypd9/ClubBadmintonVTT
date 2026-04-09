@@ -104,7 +104,7 @@
                 { id: 'sf1', name: "Sân 1", type: "semi", teamA: 'Nhất A', teamB: 'Nhì B' },
                 { id: 'sf2', name: "Sân 2", type: "semi", teamA: 'Nhì A', teamB: 'Nhất B' }
             ]},
-            { title: "Chung Kết & Xếp Hạng", note: "Xác định các thứ hạng chung cuộc.", courts: [
+            { title: "Chung Kết", note: "Xác định các thứ hạng chung cuộc.", courts: [
                 { id: 'f1', name: "Sân 1", type: "final", teamA: 'Thắng BK1', teamB: 'Thắng BK2' },
                 { id: 'f2', name: "Sân 2", type: "rank", teamA: 'Thua BK1', teamB: 'Thua BK2' }
             ]}
@@ -191,7 +191,7 @@
                 <div class="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden transition-all hover:shadow-md">
                     <div class="px-6 py-3 text-[10px] font-black uppercase tracking-[0.3em] flex justify-between items-center ${headerClass}">
                         <span>📍 ${court.name}</span>
-                        <span>${court.group ? `Bảng ${court.group}` : (court.type === 'semi' ? 'Bán Kết' : 'Xếp Hạng')}</span>
+                        <span>${court.group ? `Bảng ${court.group}` : (court.type === 'semi' ? 'Bán Kết' : (court.type === 'final' ? 'Chung Kết' : 'Tranh Hạng Ba'))}</span>
                     </div>
                     <div class="p-6 md:p-8 space-y-6 text-center">
                         <div class="flex justify-around items-center relative">
