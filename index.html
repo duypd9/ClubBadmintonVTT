@@ -12,7 +12,7 @@
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         
-        /* Hiệu ứng Header mới */
+        /* Hiệu ứng Header */
         .header-gradient {
             background: linear-gradient(135deg, #ee0000 0%, #c20000 50%, #990000 100%);
         }
@@ -29,9 +29,8 @@
 </head>
 <body class="text-slate-900 pb-12">
 
-    <!-- HEADER NÂNG CẤP -->
+    <!-- HEADER -->
     <header class="header-gradient text-white relative overflow-hidden shadow-2xl">
-        <!-- Đồ họa trang trí -->
         <div class="absolute inset-0 header-pattern opacity-40"></div>
         <div class="absolute -top-24 -right-24 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
         <div class="absolute -bottom-24 -left-24 w-72 h-72 bg-black/10 rounded-full blur-2xl"></div>
@@ -59,8 +58,6 @@
                     </div>
                 </div>
             </div>
-            
-            <!-- Đường vạch trang trí dưới cùng -->
             <div class="mt-8 h-1 w-full bg-gradient-to-r from-transparent via-white/20 to-transparent rounded-full"></div>
         </div>
     </header>
@@ -90,26 +87,26 @@
 
     <script>
         const schedule = [
-            { title: "Khởi động & Phổ biến", courts: [], note: "Phổ biến luật Tiếp sức: Cặp 1 đánh đến 21, Cặp 2 nối tiếp đến 42. Toàn bộ các sân mở tự do để các vận động viên khởi động." },
-            { title: "Vòng Bảng - Lượt 1", note: "Lượt 1: A1 vs A2, B1 vs B2. Cặp 1 đổi sân khi chạm mốc 21.", courts: [
+            { title: "Khởi động & Phổ biến", courts: [], note: "Phổ biến luật Tiếp sức: Cặp 1 đánh đến 21, Cặp 2 nối tiếp đến 42." },
+            { title: "Vòng Bảng - Lượt 1", courts: [
                 { id: 'r1_m1', name: "Sân 1", group: 'A', teamA: 'A1', teamB: 'A2' },
-                { id: 'r1_m2', name: "Sân 2", group: 'B', teamA: 'B1', teamB: 'B2' },
-                { id: 'r1_m3', name: "Sân 3", group: 'Tự do', activity: 'Khởi động thêm', type: 'warmup' }
+                { id: 'r1_m2', name: "Sân 2", group: 'B', teamA: 'B1', teamB: 'B2' }
             ]},
-            { title: "Vòng Bảng - Lượt 2", note: "Lượt 2: A1 vs A3, B1 vs B3.", courts: [
+            { title: "Vòng Bảng - Lượt 2", courts: [
                 { id: 'r2_m1', name: "Sân 1", group: 'A', teamA: 'A1', teamB: 'A3' },
-                { id: 'r2_m2', name: "Sân 2", group: 'B', teamA: 'B1', teamB: 'B3' },
-                { id: 'r2_m3', name: "Sân 3", group: 'Giao lưu', activity: 'A2 vs B2 (Giao hữu)', type: 'warmup' }
+                { id: 'r2_m2', name: "Sân 2", group: 'B', teamA: 'B1', teamB: 'B3' }
             ]},
-            { title: "Vòng Bảng - Lượt 3", note: "Hoàn tất vòng tròn bảng.", courts: [
+            { title: "Vòng Bảng - Lượt 3", courts: [
                 { id: 'r3_m1', name: "Sân 1", group: 'A', teamA: 'A2', teamB: 'A3' },
-                { id: 'r3_m2', name: "Sân 2", group: 'B', teamA: 'B2', teamB: 'B3' },
-                { id: 'r3_m3', name: "Sân 3", group: 'Giao lưu', activity: 'A1 vs B1 (Giao hữu)', type: 'warmup' }
+                { id: 'r3_m2', name: "Sân 2", group: 'B', teamA: 'B2', teamB: 'B3' }
             ]},
-            { title: "Chung Kết & Xếp Hạng", note: "Trận đấu cuối cùng xác định nhà vô địch!", courts: [
-                { id: 'f1', name: "Sân 1", type: "final", teamA: 'Nhất A', teamB: 'Nhất B' },
-                { id: 'f2', name: "Sân 2", type: "rank", teamA: 'Nhì A', teamB: 'Nhì B' },
-                { id: 'f3', name: "Sân 3", type: "rank", teamA: 'Ba A', teamB: 'Ba B' }
+            { title: "Vòng Bán Kết", note: "Đấu chéo: Nhất bảng này gặp Nhì bảng kia. Đội thắng vào Chung kết.", courts: [
+                { id: 'sf1', name: "Sân 1", type: "semi", teamA: 'Nhất A', teamB: 'Nhì B' },
+                { id: 'sf2', name: "Sân 2", type: "semi", teamA: 'Nhì A', teamB: 'Nhất B' }
+            ]},
+            { title: "Chung Kết & Xếp Hạng", note: "Xác định các thứ hạng chung cuộc.", courts: [
+                { id: 'f1', name: "Sân 1", type: "final", teamA: 'Thắng BK1', teamB: 'Thắng BK2' },
+                { id: 'f2', name: "Sân 2", type: "rank", teamA: 'Thua BK1', teamB: 'Thua BK2' }
             ]}
         ];
 
@@ -156,13 +153,12 @@
         function renderContent() {
             const content = document.getElementById('content-area');
             const slot = schedule[currentSlotIndex];
-            const isWarmup = slot.title.includes("Khởi động");
 
-            if (isWarmup) {
+            if (slot.courts.length === 0) {
                 content.innerHTML = `
                     <div class="bg-white rounded-[2.5rem] border border-slate-200 p-8 md:p-12 shadow-sm text-center">
                         <div class="bg-red-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl">ℹ️</div>
-                        <h2 class="text-2xl font-black text-slate-900 uppercase tracking-tight mb-4 text-center">Thông báo Khởi động</h2>
+                        <h2 class="text-2xl font-black text-slate-900 uppercase tracking-tight mb-4 text-center">${slot.title}</h2>
                         <div class="max-w-md mx-auto p-6 bg-slate-50 rounded-3xl border border-dashed border-slate-200 text-slate-600 font-bold leading-relaxed italic text-center">
                             "${slot.note}"
                         </div>
@@ -171,9 +167,10 @@
             } else {
                 content.innerHTML = `
                     <div class="flex items-center justify-between px-2">
-                        <span class="flex items-center gap-2 text-sm font-black text-slate-800 uppercase tracking-widest">⚔️ Matches</span>
+                        <span class="flex items-center gap-2 text-sm font-black text-slate-800 uppercase tracking-widest">⚔️ Trận đấu: ${slot.title}</span>
                         <div class="h-0.5 bg-red-100 flex-1 mx-4"></div>
                     </div>
+                    ${slot.note ? `<div class="px-2 text-[11px] font-bold text-slate-400 italic mb-2 uppercase tracking-tight">${slot.note}</div>` : ''}
                     <div class="grid grid-cols-1 gap-6">
                         ${slot.courts.map(court => renderMatchCard(court)).join('')}
                     </div>
@@ -182,26 +179,19 @@
         }
 
         function renderMatchCard(court) {
-            if (court.type === 'warmup') {
-                return `
-                    <div class="bg-white rounded-[2.5rem] border border-slate-200 p-8 flex flex-col items-center shadow-sm">
-                        <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4 text-2xl">👥</div>
-                        <div class="text-xl font-black text-slate-800 tracking-tight text-center uppercase">${court.activity}</div>
-                        <div class="text-[10px] text-slate-400 font-bold uppercase mt-2 italic">${court.name}</div>
-                    </div>
-                `;
-            }
-
             const mS = scores[court.id] || { a_p1: '', b_p1: '', a_p2: '', b_p2: '' };
             const isFinished = parseInt(mS.a_p2) >= 42 || parseInt(mS.b_p2) >= 42;
 
-            const headerClass = court.type === 'final' ? 'bg-yellow-400 text-yellow-900' : (court.type === 'rank' ? 'bg-slate-800 text-white' : 'bg-red-50 text-red-600');
+            let headerClass = 'bg-red-50 text-red-600';
+            if (court.type === 'semi') headerClass = 'bg-blue-600 text-white';
+            if (court.type === 'final') headerClass = 'bg-yellow-400 text-yellow-900';
+            if (court.type === 'rank') headerClass = 'bg-slate-800 text-white';
 
             return `
                 <div class="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden transition-all hover:shadow-md">
                     <div class="px-6 py-3 text-[10px] font-black uppercase tracking-[0.3em] flex justify-between items-center ${headerClass}">
                         <span>📍 ${court.name}</span>
-                        ${court.group ? `<span class="bg-red-600/10 px-2 py-0.5 rounded-full">Bảng ${court.group}</span>` : ''}
+                        <span>${court.group ? `Bảng ${court.group}` : (court.type === 'semi' ? 'Bán Kết' : 'Xếp Hạng')}</span>
                     </div>
                     <div class="p-6 md:p-8 space-y-6 text-center">
                         <div class="flex justify-around items-center relative">
@@ -238,7 +228,7 @@
                                 </div>
                                 <div class="text-center"><div class="text-sm font-black text-slate-400 italic text-right">${court.teamB}.2</div></div>
                             </div>
-                            <div id="finish-${court.id}" class="mt-4 pt-4 border-t border-red-100 text-red-600 font-black uppercase text-[10px] tracking-widest animate-pulse" style="display: ${isFinished ? 'flex' : 'none'}; justify-content: center;">✅ Finish Game</div>
+                            <div id="finish-${court.id}" class="mt-4 pt-4 border-t border-red-100 text-red-600 font-black uppercase text-[10px] tracking-widest animate-pulse" style="display: ${isFinished ? 'flex' : 'none'}; justify-content: center;">✅ Kết Thúc Trận</div>
                         </div>
                     </div>
                 </div>
