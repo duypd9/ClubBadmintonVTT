@@ -1,384 +1,298 @@
-import React, { useState, useMemo } from 'react';
-import { Clock, Trophy, MapPin, Users, Timer, AlertCircle, Table as TableIcon, CheckCircle2, ChevronRight, Swords, ArrowDown, Info } from 'lucide-react';
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viettel VTT Badminton - Live Score</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    </style>
+</head>
+<body class="text-slate-900 pb-12">
 
-const App = () => {
-  const [currentSlotIndex, setCurrentSlotIndex] = useState(0);
-  const [scores, setScores] = useState({});
-
-  // Cấu trúc scores: { matchId: { a_p1: '', b_p1: '', a_p2: '', b_p2: '' } }
-  const handleScoreChange = (matchId, field, value) => {
-    if (value !== '' && (!/^\d+$/.test(value) || value.length > 2)) return;
-
-    setScores(prev => ({
-      ...prev,
-      [matchId]: {
-        ...prev[matchId],
-        [field]: value
-      }
-    }));
-  };
-
-  const schedule = [
-    {
-      time: "00:00 - 00:15",
-      title: "Khởi động & Phổ biến",
-      courts: [], // Loại bỏ các sân khởi động
-      note: "Phổ biến luật Tiếp sức: Cặp 1 đánh đến 22, Cặp 2 nối tiếp đến 44. Toàn bộ các sân mở tự do để các vận động viên khởi động."
-    },
-    {
-      time: "00:15 - 01:00",
-      title: "Vòng Bảng - Lượt 1",
-      courts: [
-        { id: 'r1_m1', name: "Sân 1", group: 'A', teamA: 'A1', teamB: 'A2' },
-        { id: 'r1_m2', name: "Sân 2", group: 'B', teamA: 'B1', teamB: 'B2' },
-        { id: 'r1_m3', name: "Sân 3", group: 'Tự do', activity: 'Khởi động thêm / Giao lưu', type: 'warmup' }
-      ],
-      note: "Lượt 1: A1 vs A2, B1 vs B2. Cặp 1 đổi sân khi một đội chạm mốc 22."
-    },
-    {
-      time: "01:00 - 01:45",
-      title: "Vòng Bảng - Lượt 2",
-      courts: [
-        { id: 'r2_m1', name: "Sân 1", group: 'A', teamA: 'A1', teamB: 'A3' },
-        { id: 'r2_m2', name: "Sân 2", group: 'B', teamA: 'B1', teamB: 'B3' },
-        { id: 'r2_m3', name: "Sân 3", group: 'Giao lưu', activity: 'Team A2 vs B2 (Giao hữu)', type: 'warmup' }
-      ],
-      note: "Lượt 2: A1 vs A3, B1 vs B3."
-    },
-    {
-      time: "01:45 - 02:30",
-      title: "Vòng Bảng - Lượt 3",
-      courts: [
-        { id: 'r3_m1', name: "Sân 1", group: 'A', teamA: 'A2', teamB: 'A3' },
-        { id: 'r3_m2', name: "Sân 2", group: 'B', teamB: 'B3', teamA: 'B2' },
-        { id: 'r3_m3', name: "Sân 3", group: 'Giao lưu', activity: 'Team A1 vs B1 (Giao hữu)', type: 'warmup' }
-      ],
-      note: "Hoàn tất vòng tròn bảng. Xác định các đội vào Chung Kết."
-    },
-    {
-      time: "02:30 - 03:15",
-      title: "Chung Kết & Xếp Hạng",
-      courts: [
-        { id: 'f1', name: "Sân 1", type: "final", teamA: 'Nhất A', teamB: 'Nhất B' },
-        { id: 'f2', name: "Sân 2", type: "rank", teamA: 'Nhì A', teamB: 'Nhì B' },
-        { id: 'f3', name: "Sân 3", type: "rank", teamA: 'Ba A', teamB: 'Ba B' }
-      ],
-      note: "Trận đấu cuối cùng. Đội thắng chung cuộc nhận Cup!"
-    }
-  ];
-
-  const standings = useMemo(() => {
-    const stats = {};
-    const initTeam = (name) => {
-      if (!stats[name]) stats[name] = { wins: 0, played: 0, pointsFor: 0, pointsAgainst: 0 };
-    };
-
-    schedule.forEach(slot => {
-      slot.courts.forEach(court => {
-        if (court.id && court.teamA && court.teamB && !court.type) {
-          initTeam(court.teamA);
-          initTeam(court.teamB);
-
-          const s = scores[court.id];
-          if (s) {
-            const a2 = parseInt(s.a_p2) || 0;
-            const b2 = parseInt(s.b_p2) || 0;
-
-            if (a2 > 0 || b2 > 0) {
-              stats[court.teamA].played += 1;
-              stats[court.teamB].played += 1;
-              stats[court.teamA].pointsFor += a2;
-              stats[court.teamA].pointsAgainst += b2;
-              stats[court.teamB].pointsFor += b2;
-              stats[court.teamB].pointsAgainst += a2;
-
-              if (a2 >= 44 || a2 > b2) {
-                stats[court.teamA].wins += 1;
-              } else if (b2 >= 44 || b2 > a2) {
-                stats[court.teamB].wins += 1;
-              }
-            }
-          }
-        }
-      });
-    });
-
-    return stats;
-  }, [scores]);
-
-  const MatchCard = ({ court }) => {
-    const matchId = court.id;
-    const matchScores = scores[matchId] || { a_p1: '', b_p1: '', a_p2: '', b_p2: '' };
-    const p2StartA = matchScores.a_p1 || '0';
-    const p2StartB = matchScores.b_p1 || '0';
-
-    return (
-      <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden transition-all hover:shadow-md">
-        <div className={`px-6 py-3 text-[10px] font-black uppercase tracking-[0.3em] flex justify-between items-center ${
-          court.type === 'final' ? 'bg-yellow-400 text-yellow-900' : 
-          court.type === 'rank' ? 'bg-slate-800 text-white' : 'bg-red-50 text-red-600'
-        }`}>
-          <span className="flex items-center gap-2"><MapPin className="w-3 h-3" /> {court.name}</span>
-          {court.group && <span className="bg-red-600/10 px-2 py-0.5 rounded-full">Bảng {court.group}</span>}
-        </div>
-
-        <div className="p-6 md:p-8 space-y-6">
-          <div className="flex justify-around items-center relative">
-            <div className="text-center z-10 w-1/3">
-              <div className="text-3xl font-black text-slate-900 mb-1">{court.teamA}</div>
-              <div className="text-[10px] font-bold text-red-600 uppercase tracking-widest italic">Home</div>
-            </div>
-            <div className="absolute left-1/2 -translate-x-1/2 text-slate-50 font-black text-5xl italic select-none uppercase">Relay</div>
-            <div className="text-center z-10 w-1/3">
-              <div className="text-3xl font-black text-slate-900 mb-1">{court.teamB}</div>
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">Away</div>
-            </div>
-          </div>
-
-          <div className="relative group bg-slate-50 p-6 rounded-3xl border border-dashed border-slate-200">
-            <div className="absolute -top-3 left-6 px-3 bg-white text-[10px] font-black text-red-600 border border-slate-100 rounded-full shadow-sm uppercase tracking-tighter">
-              Lượt 1: Cặp 1 (22đ)
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-black text-slate-400 italic">{court.teamA}.1</div>
-              <div className="flex items-center gap-4">
-                <input 
-                  type="text" 
-                  inputMode="numeric"
-                  className="w-16 h-14 bg-white border-2 border-slate-200 rounded-2xl text-center font-black text-2xl focus:border-red-600 outline-none shadow-sm transition-all"
-                  value={matchScores.a_p1}
-                  placeholder="0"
-                  onChange={(e) => handleScoreChange(matchId, 'a_p1', e.target.value)}
-                />
-                <div className="text-slate-300 font-black text-2xl">:</div>
-                <input 
-                  type="text" 
-                  inputMode="numeric"
-                  className="w-16 h-14 bg-white border-2 border-slate-200 rounded-2xl text-center font-black text-2xl focus:border-red-600 outline-none shadow-sm transition-all"
-                  value={matchScores.b_p1}
-                  placeholder="0"
-                  onChange={(e) => handleScoreChange(matchId, 'b_p1', e.target.value)}
-                />
-              </div>
-              <div className="text-sm font-black text-slate-400 italic text-right">{court.teamB}.1</div>
-            </div>
-          </div>
-
-          <div className="flex justify-center -my-3 relative z-10">
-             <div className="bg-white p-2 rounded-full border border-slate-100 shadow-sm">
-                <ArrowDown className="w-5 h-5 text-red-600 animate-bounce" />
-             </div>
-          </div>
-
-          <div className="relative group bg-red-50/50 p-6 rounded-3xl border-2 border-red-100">
-            <div className="absolute -top-3 left-6 px-3 bg-red-600 text-[10px] font-black text-white rounded-full shadow-md uppercase tracking-tighter">
-              Lượt 2: Cặp 2 (44đ)
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex flex-col items-center">
-                <div className="text-sm font-black text-slate-400 italic">{court.teamA}.2</div>
-                <div className="text-[10px] font-bold text-red-400 italic">Từ: {p2StartA}</div>
-              </div>
-              <div className="flex items-center gap-4">
-                <input 
-                  type="text" 
-                  inputMode="numeric"
-                  className="w-16 h-14 bg-white border-2 border-red-200 rounded-2xl text-center font-black text-2xl focus:border-red-600 outline-none shadow-sm transition-all text-red-700"
-                  value={matchScores.a_p2}
-                  placeholder={p2StartA}
-                  onChange={(e) => handleScoreChange(matchId, 'a_p2', e.target.value)}
-                />
-                <div className="text-red-200 font-black text-2xl">:</div>
-                <input 
-                  type="text" 
-                  inputMode="numeric"
-                  className="w-16 h-14 bg-white border-2 border-red-200 rounded-2xl text-center font-black text-2xl focus:border-red-600 outline-none shadow-sm transition-all text-red-700"
-                  value={matchScores.b_p2}
-                  placeholder={p2StartB}
-                  onChange={(e) => handleScoreChange(matchId, 'b_p2', e.target.value)}
-                />
-              </div>
-              <div className="flex flex-col items-center text-right">
-                <div className="text-sm font-black text-slate-400 italic">{court.teamB}.2</div>
-                <div className="text-[10px] font-bold text-red-400 italic">Từ: {p2StartB}</div>
-              </div>
-            </div>
-            {(parseInt(matchScores.a_p2) >= 44 || parseInt(matchScores.b_p2) >= 44) && (
-              <div className="mt-4 pt-4 border-t border-red-100 flex justify-center items-center gap-2 text-red-600 font-black uppercase text-[10px] tracking-widest animate-pulse">
-                <CheckCircle2 className="w-4 h-4" />
-                Finish Game
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const currentSlot = schedule[currentSlotIndex];
-  const isWarmupSlot = currentSlot.title.includes("Khởi động");
-
-  return (
-    <div className="min-h-screen bg-[#f8f9fa] font-sans text-slate-900 pb-12">
-      <header className="bg-[#ee0000] text-white p-6 shadow-xl sticky top-0 z-50 overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-20 -mt-20"></div>
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-black/5 rounded-full -ml-10 -mb-10"></div>
-        
-        <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative z-10">
-          <div className="flex flex-col">
-            <h1 className="text-xl md:text-2xl font-black flex items-center gap-2 tracking-tight">
-              <Trophy className="w-8 h-8 text-yellow-400 shrink-0" />
-              VIETTEL VTT BADMINTON
-            </h1>
-            <div className="flex items-center gap-2 mt-1">
-              <div className="w-8 shrink-0"></div> {/* Spacer to align with text after icon */}
-              <p className="text-white/80 text-[10px] font-bold uppercase tracking-[0.2em]">Cúp Đồng đội tiếp sức "Mini" - Live Score</p>
-            </div>
-          </div>
-          <div className="bg-white text-red-600 px-4 py-2 rounded-xl border border-white/20 shadow-lg text-center self-end md:self-center">
-            <div className="text-[10px] font-black uppercase italic">Vòng Tròn</div>
-            <div className="font-mono text-xl font-bold tracking-tighter uppercase leading-none mt-1 whitespace-nowrap">44 Điểm</div>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-4xl mx-auto p-4 space-y-8 mt-4">
-        {/* Navigation Slots */}
-        <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
-          {schedule.map((slot, idx) => (
-            <button
-              key={idx}
-              onClick={() => setCurrentSlotIndex(idx)}
-              className={`flex-shrink-0 px-6 py-4 rounded-2xl border-2 transition-all font-bold text-sm min-w-[160px] ${
-                currentSlotIndex === idx 
-                ? 'bg-red-600 border-red-600 text-white shadow-lg shadow-red-200' 
-                : 'bg-white border-slate-100 text-slate-400 hover:border-red-100'
-              }`}
-            >
-              <div className="text-[10px] opacity-70 mb-1">{slot.time}</div>
-              <div className="truncate uppercase tracking-tight">{slot.title}</div>
-            </button>
-          ))}
-        </div>
-
-        {/* Current Content Area */}
-        <div className="space-y-4">
-          {isWarmupSlot ? (
-            <div className="bg-white rounded-[2rem] border border-slate-200 p-8 md:p-12 shadow-sm text-center">
-              <div className="bg-red-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Info className="w-10 h-10 text-red-600" />
-              </div>
-              <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-4">Thông báo Khởi động</h2>
-              <div className="max-w-md mx-auto p-6 bg-slate-50 rounded-3xl border border-dashed border-slate-200 text-slate-600 font-bold leading-relaxed italic">
-                "{currentSlot.note}"
-              </div>
-              <div className="mt-8 flex justify-center gap-4">
-                 <div className="flex flex-col items-center">
-                    <div className="text-red-600 font-black text-lg">Sân 1</div>
-                    <div className="text-[10px] text-slate-400 uppercase font-black">Open</div>
-                 </div>
-                 <div className="w-px h-10 bg-slate-100"></div>
-                 <div className="flex flex-col items-center">
-                    <div className="text-red-600 font-black text-lg">Sân 2</div>
-                    <div className="text-[10px] text-slate-400 uppercase font-black">Open</div>
-                 </div>
-                 <div className="w-px h-10 bg-slate-100"></div>
-                 <div className="flex flex-col items-center">
-                    <div className="text-red-600 font-black text-lg">Sân 3</div>
-                    <div className="text-[10px] text-slate-400 uppercase font-black">Open</div>
-                 </div>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="flex items-center justify-between px-2">
-                <span className="flex items-center gap-2 text-sm font-black text-slate-800 uppercase tracking-widest">
-                    <Swords className="w-4 h-4 text-red-600" /> Matches
-                </span>
-                <div className="h-0.5 bg-red-100 flex-1 mx-4"></div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-6">
-                {currentSlot.courts.map((court) => (
-                  court.type === 'warmup' ? (
-                    <div key={court.id} className="bg-white rounded-[2rem] border border-slate-200 p-8 flex flex-col items-center shadow-sm">
-                      <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
-                        <Users className="w-8 h-8 text-red-300" />
-                      </div>
-                      <div className="text-xl font-black text-slate-800 tracking-tight text-center uppercase">{court.activity}</div>
-                      <div className="text-[10px] text-slate-400 font-bold uppercase mt-2 italic">{court.name}</div>
-                    </div>
-                  ) : (
-                    <MatchCard key={court.id} court={court} />
-                  )
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Standings Table */}
-        <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm p-6 md:p-8">
-           <div className="flex items-center gap-3 mb-8 border-l-4 border-red-600 pl-4">
-              <h3 className="font-black text-slate-900 uppercase tracking-tighter text-xl">
-                Bảng Xếp Hạng
-              </h3>
-              <div className="bg-red-50 text-red-600 text-[10px] font-black px-2 py-0.5 rounded italic">LIVE</div>
-           </div>
-
-           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-              {['A', 'B'].map(g => (
-                <div key={g} className="space-y-4">
-                   <div className="flex items-center justify-between">
-                      <span className="font-black text-red-600 text-sm uppercase tracking-widest italic">Bảng {g}</span>
-                   </div>
-                   <div className="overflow-hidden border border-slate-100 rounded-2xl bg-slate-50/30">
-                      <table className="w-full text-sm text-center">
-                        <thead className="bg-slate-900 text-white font-bold text-[9px] uppercase">
-                          <tr>
-                            <th className="p-3 text-left">Đội</th>
-                            <th className="p-3">Trận</th>
-                            <th className="p-3">Thắng</th>
-                            <th className="p-3">H.Số</th>
-                          </tr>
-                        </thead>
-                        <tbody className="font-bold text-slate-700">
-                          {[1, 2, 3].map(i => {
-                            const teamName = `${g}${i}`;
-                            const stats = standings[teamName] || { wins: 0, played: 0, pointsFor: 0, pointsAgainst: 0 };
-                            return (
-                              <tr key={i} className="border-t border-slate-100 hover:bg-red-50/30 transition-colors">
-                                <td className="p-3 text-left font-black text-slate-900">{teamName}</td>
-                                <td className="p-3 text-slate-400 font-medium">{stats.played}</td>
-                                <td className="p-3">
-                                  <div className="bg-red-600 text-white w-6 h-6 flex items-center justify-center rounded-lg mx-auto text-[11px] italic">
-                                    {stats.wins}
-                                  </div>
-                                </td>
-                                <td className={`p-3 ${stats.pointsFor - stats.pointsAgainst >= 0 ? 'text-red-600' : 'text-slate-400'}`}>
-                                  {stats.pointsFor - stats.pointsAgainst > 0 ? `+${stats.pointsFor - stats.pointsAgainst}` : stats.pointsFor - stats.pointsAgainst}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                   </div>
+    <!-- HEADER -->
+    <header class="bg-[#ee0000] text-white p-6 shadow-xl sticky top-0 z-50 overflow-hidden">
+        <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-20 -mt-20"></div>
+        <div class="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative z-10">
+            <div>
+                <h1 class="text-xl md:text-2xl font-black flex items-center gap-2 tracking-tight">
+                    <span class="text-yellow-400 text-2xl">🏆</span> VIETTEL VTT BADMINTON
+                </h1>
+                <div class="flex items-center gap-2 mt-1">
+                    <div class="w-8"></div>
+                    <p class="text-white/80 text-[10px] font-bold uppercase tracking-[0.2em]">Cúp Đồng đội tiếp sức "Mini" - Live Score</p>
                 </div>
-              ))}
-           </div>
-           
-           <div className="mt-10 flex items-start gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-             <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-             <div className="text-[10px] font-bold text-slate-500 leading-relaxed">
-               LƯU Ý: Thứ tự xếp hạng dựa trên Số trận thắng {'>'} Hiệu số điểm {'>'} Đối đầu. Hệ thống tự động cập nhật ngay khi điểm được nhập vào các sân.
-             </div>
-           </div>
+            </div>
+            <div class="bg-white text-red-600 px-4 py-2 rounded-xl shadow-lg text-center self-end md:self-center">
+                <div class="text-[10px] font-black uppercase italic">Vòng Tròn</div>
+                <div class="font-mono text-xl font-bold tracking-tighter uppercase leading-none mt-1 whitespace-nowrap">44 Điểm</div>
+            </div>
         </div>
-      </main>
-    </div>
-  );
-};
+    </header>
 
-export default App;
+    <main class="max-w-4xl mx-auto p-4 space-y-8 mt-4">
+        <!-- NAVIGATION SLOTS -->
+        <div id="nav-slots" class="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
+            <!-- Tabs generated by JS -->
+        </div>
+
+        <!-- CONTENT AREA -->
+        <div id="content-area" class="space-y-4">
+            <!-- Content generated by JS -->
+        </div>
+
+        <!-- STANDINGS -->
+        <div class="bg-white rounded-[2rem] border border-slate-200 shadow-sm p-6 md:p-8">
+            <div class="flex items-center gap-3 mb-8 border-l-4 border-red-600 pl-4">
+                <h3 class="font-black text-slate-900 uppercase tracking-tighter text-xl">Bảng Xếp Hạng</h3>
+                <div class="bg-red-50 text-red-600 text-[10px] font-black px-2 py-0.5 rounded italic">LIVE</div>
+            </div>
+            <div id="standings-tables" class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                <!-- Tables generated by JS -->
+            </div>
+            <div class="mt-10 flex items-start gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                <span class="text-red-600 mt-0.5">⚠️</span>
+                <div class="text-[10px] font-bold text-slate-500 leading-relaxed">
+                    LƯU Ý: Thứ tự xếp hạng dựa trên Số trận thắng > Hiệu số điểm > Đối đầu. Hệ thống tự động cập nhật ngay khi điểm được nhập.
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Dữ liệu giải đấu
+        const schedule = [
+            { time: "00:00 - 00:15", title: "Khởi động & Phổ biến", courts: [], note: "Phổ biến luật Tiếp sức: Cặp 1 đánh đến 22, Cặp 2 nối tiếp đến 44. Toàn bộ các sân mở tự do để các vận động viên khởi động." },
+            { time: "00:15 - 01:00", title: "Vòng Bảng - Lượt 1", note: "Lượt 1: A1 vs A2, B1 vs B2. Cặp 1 đổi sân khi chạm mốc 22.", courts: [
+                { id: 'r1_m1', name: "Sân 1", group: 'A', teamA: 'A1', teamB: 'A2' },
+                { id: 'r1_m2', name: "Sân 2", group: 'B', teamA: 'B1', teamB: 'B2' },
+                { id: 'r1_m3', name: "Sân 3", group: 'Tự do', activity: 'Khởi động thêm', type: 'warmup' }
+            ]},
+            { time: "01:00 - 01:45", title: "Vòng Bảng - Lượt 2", note: "Lượt 2: A1 vs A3, B1 vs B3.", courts: [
+                { id: 'r2_m1', name: "Sân 1", group: 'A', teamA: 'A1', teamB: 'A3' },
+                { id: 'r2_m2', name: "Sân 2", group: 'B', teamA: 'B1', teamB: 'B3' },
+                { id: 'r2_m3', name: "Sân 3", group: 'Giao lưu', activity: 'A2 vs B2 (Giao hữu)', type: 'warmup' }
+            ]},
+            { time: "01:45 - 02:30", title: "Vòng Bảng - Lượt 3", note: "Hoàn tất vòng tròn bảng.", courts: [
+                { id: 'r3_m1', name: "Sân 1", group: 'A', teamA: 'A2', teamB: 'A3' },
+                { id: 'r3_m2', name: "Sân 2", group: 'B', teamA: 'B2', teamB: 'B3' },
+                { id: 'r3_m3', name: "Sân 3", group: 'Giao lưu', activity: 'A1 vs B1 (Giao hữu)', type: 'warmup' }
+            ]},
+            { time: "02:30 - 03:15", title: "Chung Kết & Xếp Hạng", note: "Trận đấu cuối cùng xác định nhà vô địch!", courts: [
+                { id: 'f1', name: "Sân 1", type: "final", teamA: 'Nhất A', teamB: 'Nhất B' },
+                { id: 'f2', name: "Sân 2", type: "rank", teamA: 'Nhì A', teamB: 'Nhì B' },
+                { id: 'f3', name: "Sân 3", type: "rank", teamA: 'Ba A', teamB: 'Ba B' }
+            ]}
+        ];
+
+        let currentSlotIndex = 0;
+        let scores = {};
+
+        function init() {
+            renderNav();
+            renderContent();
+            renderStandings();
+        }
+
+        function renderNav() {
+            const nav = document.getElementById('nav-slots');
+            nav.innerHTML = schedule.map((slot, idx) => `
+                <button onclick="changeSlot(${idx})" class="flex-shrink-0 px-6 py-4 rounded-2xl border-2 transition-all font-bold text-sm min-w-[160px] ${currentSlotIndex === idx ? 'bg-red-600 border-red-600 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:border-red-100'}">
+                    <div class="text-[10px] opacity-70 mb-1">${slot.time}</div>
+                    <div class="truncate uppercase tracking-tight">${slot.title}</div>
+                </button>
+            `).join('');
+        }
+
+        function changeSlot(idx) {
+            currentSlotIndex = idx;
+            renderNav();
+            renderContent();
+        }
+
+        function updateScore(matchId, field, value) {
+            if (value !== '' && !/^\d+$/.test(value)) return;
+            if (!scores[matchId]) scores[matchId] = { a_p1: '', b_p1: '', a_p2: '', b_p2: '' };
+            scores[matchId][field] = value;
+            
+            // Re-render only parts that need updating to preserve focus if possible
+            // But for simplicity in vanilla JS, we re-render content and standings
+            renderContent();
+            renderStandings();
+            
+            // Re-focus the input that was being edited
+            const inputId = `input-${matchId}-${field}`;
+            const el = document.getElementById(inputId);
+            if(el) {
+                el.focus();
+                el.setSelectionRange(el.value.length, el.value.length);
+            }
+        }
+
+        function renderContent() {
+            const content = document.getElementById('content-area');
+            const slot = schedule[currentSlotIndex];
+            const isWarmup = slot.title.includes("Khởi động");
+
+            if (isWarmup) {
+                content.innerHTML = `
+                    <div class="bg-white rounded-[2rem] border border-slate-200 p-8 md:p-12 shadow-sm text-center">
+                        <div class="bg-red-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl">ℹ️</div>
+                        <h2 class="text-2xl font-black text-slate-900 uppercase tracking-tight mb-4 text-center">Thông báo Khởi động</h2>
+                        <div class="max-w-md mx-auto p-6 bg-slate-50 rounded-3xl border border-dashed border-slate-200 text-slate-600 font-bold leading-relaxed italic text-center">
+                            "${slot.note}"
+                        </div>
+                        <div class="mt-8 flex justify-center gap-8">
+                            <div class="text-center"><div class="text-red-600 font-black text-lg">Sân 1</div><div class="text-[10px] text-slate-400 font-black uppercase">Open</div></div>
+                            <div class="w-px h-10 bg-slate-100"></div>
+                            <div class="text-center"><div class="text-red-600 font-black text-lg">Sân 2</div><div class="text-[10px] text-slate-400 font-black uppercase">Open</div></div>
+                            <div class="w-px h-10 bg-slate-100"></div>
+                            <div class="text-center"><div class="text-red-600 font-black text-lg">Sân 3</div><div class="text-[10px] text-slate-400 font-black uppercase">Open</div></div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                content.innerHTML = `
+                    <div class="flex items-center justify-between px-2">
+                        <span class="flex items-center gap-2 text-sm font-black text-slate-800 uppercase tracking-widest">⚔️ Matches</span>
+                        <div class="h-0.5 bg-red-100 flex-1 mx-4"></div>
+                    </div>
+                    <div class="grid grid-cols-1 gap-6">
+                        ${slot.courts.map(court => renderMatchCard(court)).join('')}
+                    </div>
+                `;
+            }
+        }
+
+        function renderMatchCard(court) {
+            if (court.type === 'warmup') {
+                return `
+                    <div class="bg-white rounded-[2rem] border border-slate-200 p-8 flex flex-col items-center shadow-sm">
+                        <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4 text-2xl">👥</div>
+                        <div class="text-xl font-black text-slate-800 tracking-tight text-center uppercase">${court.activity}</div>
+                        <div class="text-[10px] text-slate-400 font-bold uppercase mt-2 italic">${court.name}</div>
+                    </div>
+                `;
+            }
+
+            const mS = scores[court.id] || { a_p1: '', b_p1: '', a_p2: '', b_p2: '' };
+            const p2A = mS.a_p1 || '0';
+            const p2B = mS.b_p1 || '0';
+            const isFinished = parseInt(mS.a_p2) >= 44 || parseInt(mS.b_p2) >= 44;
+
+            const headerClass = court.type === 'final' ? 'bg-yellow-400 text-yellow-900' : (court.type === 'rank' ? 'bg-slate-800 text-white' : 'bg-red-50 text-red-600');
+
+            return `
+                <div class="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden transition-all hover:shadow-md">
+                    <div class="px-6 py-3 text-[10px] font-black uppercase tracking-[0.3em] flex justify-between items-center ${headerClass}">
+                        <span>📍 ${court.name}</span>
+                        ${court.group ? `<span class="bg-red-600/10 px-2 py-0.5 rounded-full">Bảng ${court.group}</span>` : ''}
+                    </div>
+                    <div class="p-6 md:p-8 space-y-6 text-center">
+                        <div class="flex justify-around items-center relative">
+                            <div class="w-1/3">
+                                <div class="text-3xl font-black text-slate-900 mb-1">${court.teamA}</div>
+                                <div class="text-[10px] font-bold text-red-600 uppercase italic">Home</div>
+                            </div>
+                            <div class="absolute left-1/2 -translate-x-1/2 text-slate-100 font-black text-5xl italic select-none uppercase">Relay</div>
+                            <div class="w-1/3">
+                                <div class="text-3xl font-black text-slate-900 mb-1">${court.teamB}</div>
+                                <div class="text-[10px] font-bold text-slate-400 uppercase italic">Away</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-50 p-6 rounded-3xl border border-dashed border-slate-200 relative">
+                            <div class="absolute -top-3 left-6 px-3 bg-white text-[10px] font-black text-red-600 border border-slate-100 rounded-full uppercase">Lượt 1: Cặp 1 (22đ)</div>
+                            <div class="flex items-center justify-between">
+                                <div class="text-sm font-black text-slate-400 italic">${court.teamA}.1</div>
+                                <div class="flex items-center gap-4">
+                                    <input id="input-${court.id}-a_p1" type="number" class="w-16 h-14 bg-white border-2 border-slate-200 rounded-2xl text-center font-black text-2xl focus:border-red-600 outline-none" value="${mS.a_p1}" placeholder="0" oninput="updateScore('${court.id}', 'a_p1', this.value)">
+                                    <div class="text-slate-300 font-black text-2xl">:</div>
+                                    <input id="input-${court.id}-b_p1" type="number" class="w-16 h-14 bg-white border-2 border-slate-200 rounded-2xl text-center font-black text-2xl focus:border-red-600 outline-none" value="${mS.b_p1}" placeholder="0" oninput="updateScore('${court.id}', 'b_p1', this.value)">
+                                </div>
+                                <div class="text-sm font-black text-slate-400 italic">${court.teamB}.1</div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-center -my-3 relative z-10"><div class="bg-white p-2 rounded-full border border-slate-100 shadow-sm text-red-600">↓</div></div>
+
+                        <div class="bg-red-50/50 p-6 rounded-3xl border-2 border-red-100 relative">
+                            <div class="absolute -top-3 left-6 px-3 bg-red-600 text-[10px] font-black text-white rounded-full uppercase">Lượt 2: Cặp 2 (44đ)</div>
+                            <div class="flex items-center justify-between">
+                                <div class="text-center"><div class="text-sm font-black text-slate-400 italic">${court.teamA}.2</div><div class="text-[10px] text-red-400 font-bold italic">Từ: ${p2A}</div></div>
+                                <div class="flex items-center gap-4">
+                                    <input id="input-${court.id}-a_p2" type="number" class="w-16 h-14 bg-white border-2 border-red-200 rounded-2xl text-center font-black text-2xl focus:border-red-600 outline-none text-red-700" value="${mS.a_p2}" placeholder="${p2A}" oninput="updateScore('${court.id}', 'a_p2', this.value)">
+                                    <div class="text-red-200 font-black text-2xl">:</div>
+                                    <input id="input-${court.id}-b_p2" type="number" class="w-16 h-14 bg-white border-2 border-red-200 rounded-2xl text-center font-black text-2xl focus:border-red-600 outline-none text-red-700" value="${mS.b_p2}" placeholder="${p2B}" oninput="updateScore('${court.id}', 'b_p2', this.value)">
+                                </div>
+                                <div class="text-center"><div class="text-sm font-black text-slate-400 italic">${court.teamB}.2</div><div class="text-[10px] text-red-400 font-bold italic">Từ: ${p2B}</div></div>
+                            </div>
+                            ${isFinished ? '<div class="mt-4 pt-4 border-t border-red-100 text-red-600 font-black uppercase text-[10px] tracking-widest animate-pulse">✅ Finish Game</div>' : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function calculateStandings() {
+            const stats = {};
+            schedule.forEach(slot => {
+                slot.courts.forEach(court => {
+                    if (court.id && court.teamA && court.teamB && !court.type) {
+                        [court.teamA, court.teamB].forEach(t => { if(!stats[t]) stats[t] = { wins: 0, played: 0, pf: 0, pa: 0 }; });
+                        const s = scores[court.id];
+                        if (s && (s.a_p2 || s.b_p2)) {
+                            const a = parseInt(s.a_p2) || 0;
+                            const b = parseInt(s.b_p2) || 0;
+                            stats[court.teamA].played++; stats[court.teamB].played++;
+                            stats[court.teamA].pf += a; stats[court.teamA].pa += b;
+                            stats[court.teamB].pf += b; stats[court.teamB].pa += a;
+                            if (a > b) stats[court.teamA].wins++; else if (b > a) stats[court.teamB].wins++;
+                        }
+                    }
+                });
+            });
+            return stats;
+        }
+
+        function renderStandings() {
+            const container = document.getElementById('standings-tables');
+            const stats = calculateStandings();
+            container.innerHTML = ['A', 'B'].map(g => `
+                <div class="space-y-4">
+                    <div class="font-black text-red-600 text-sm uppercase tracking-widest italic">Bảng ${g}</div>
+                    <div class="overflow-hidden border border-slate-100 rounded-2xl bg-slate-50/30">
+                        <table class="w-full text-sm text-center">
+                            <thead class="bg-slate-900 text-white font-bold text-[9px] uppercase">
+                                <tr><th class="p-3 text-left">Đội</th><th class="p-3">Trận</th><th class="p-3">Thắng</th><th class="p-3">H.Số</th></tr>
+                            </thead>
+                            <tbody class="font-bold">
+                                ${[1, 2, 3].map(i => {
+                                    const t = `${g}${i}`;
+                                    const s = stats[t] || { wins: 0, played: 0, pf: 0, pa: 0 };
+                                    const diff = s.pf - s.pa;
+                                    return `
+                                        <tr class="border-t border-slate-100 hover:bg-red-50/30">
+                                            <td class="p-3 text-left font-black text-slate-900">${t}</td>
+                                            <td class="p-3 text-slate-400">${s.played}</td>
+                                            <td class="p-3"><div class="bg-red-600 text-white w-6 h-6 flex items-center justify-center rounded-lg mx-auto text-[11px] italic">${s.wins}</div></td>
+                                            <td class="p-3 ${diff >= 0 ? 'text-red-600' : 'text-slate-400'}">${diff > 0 ? '+' + diff : diff}</td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
