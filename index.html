@@ -69,10 +69,17 @@
         <!-- CONTENT AREA -->
         <div id="content-area" class="space-y-4"></div>
 
-        <!-- STANDINGS -->
+        <!-- STANDINGS & RESULTS -->
         <div class="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm p-6 md:p-8">
+            <div id="final-podium" class="mb-10 hidden">
+                <div class="flex items-center gap-3 mb-6 border-l-4 border-yellow-500 pl-4">
+                    <h3 class="font-black text-slate-900 uppercase tracking-tighter text-xl">Kết Quả Chung Cuộc</h3>
+                </div>
+                <div id="podium-content" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+            </div>
+
             <div class="flex items-center gap-3 mb-8 border-l-4 border-red-600 pl-4">
-                <h3 class="font-black text-slate-900 uppercase tracking-tighter text-xl">Bảng Xếp Hạng</h3>
+                <h3 class="font-black text-slate-900 uppercase tracking-tighter text-xl">Bảng Xếp Hạng Vòng Bảng</h3>
                 <div class="bg-red-50 text-red-600 text-[10px] font-black px-2 py-0.5 rounded italic">LIVE</div>
             </div>
             <div id="standings-tables" class="grid grid-cols-1 lg:grid-cols-2 gap-10"></div>
@@ -286,6 +293,68 @@
                     </div>
                 </div>
             `).join('');
+
+            updatePodium();
+        }
+
+        function updatePodium() {
+            const podiumSection = document.getElementById('final-podium');
+            const podiumContent = document.getElementById('podium-content');
+            
+            // Lấy kết quả trận Chung Kết (f1) và Tranh Hạng Ba (f2)
+            const f1 = scores['f1'];
+            const f2 = scores['f2'];
+
+            let winners = { gold: null, silver: null, bronze: null };
+
+            if (f1 && (parseInt(f1.a_p2) >= 42 || parseInt(f1.b_p2) >= 42)) {
+                if (parseInt(f1.a_p2) > parseInt(f1.b_p2)) {
+                    winners.gold = 'Thắng BK1';
+                    winners.silver = 'Thắng BK2';
+                } else {
+                    winners.gold = 'Thắng BK2';
+                    winners.silver = 'Thắng BK1';
+                }
+            }
+
+            if (f2 && (parseInt(f2.a_p2) >= 42 || parseInt(f2.b_p2) >= 42)) {
+                winners.bronze = parseInt(f2.a_p2) > parseInt(f2.b_p2) ? 'Thua BK1' : 'Thua BK2';
+            }
+
+            if (winners.gold || winners.silver || winners.bronze) {
+                podiumSection.classList.remove('hidden');
+                podiumContent.innerHTML = `
+                    <!-- Vàng -->
+                    <div class="bg-gradient-to-br from-yellow-400 to-yellow-600 p-6 rounded-3xl text-white shadow-lg transform hover:scale-105 transition-transform">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="text-3xl">🥇</span>
+                            <span class="text-[10px] font-black uppercase tracking-widest opacity-80">Vô Địch</span>
+                        </div>
+                        <div class="text-2xl font-black italic uppercase">${winners.gold || '---'}</div>
+                        <div class="mt-2 text-[11px] font-bold bg-white/20 py-1 px-3 rounded-full inline-block">Huy Chương Vàng</div>
+                    </div>
+                    <!-- Bạc -->
+                    <div class="bg-gradient-to-br from-slate-300 to-slate-500 p-6 rounded-3xl text-white shadow-lg transform hover:scale-105 transition-transform">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="text-3xl">🥈</span>
+                            <span class="text-[10px] font-black uppercase tracking-widest opacity-80">Giải Nhì</span>
+                        </div>
+                        <div class="text-2xl font-black italic uppercase">${winners.silver || '---'}</div>
+                        <div class="mt-2 text-[11px] font-bold bg-white/20 py-1 px-3 rounded-full inline-block">Huy Chương Bạc</div>
+                    </div>
+                    <!-- Đồng -->
+                    <div class="bg-gradient-to-br from-orange-400 to-orange-700 p-6 rounded-3xl text-white shadow-lg transform hover:scale-105 transition-transform">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="text-3xl">🥉</span>
+                            <span class="text-[10px] font-black uppercase tracking-widest opacity-80">Giải Ba</span>
+                        </div>
+                        <div class="text-2xl font-black italic uppercase">${winners.bronze || '---'}</div>
+                        <div class="mt-2 text-[11px] font-bold bg-white/20 py-1 px-3 rounded-full inline-block">Huy Chương Đồng</div>
+                    </div>
+                `;
+            } else {
+                podiumSection.classList.add('hidden');
+            }
         }
 
         window.onload = init;
