@@ -300,7 +300,7 @@
                         <div class="bg-slate-50 p-4 rounded-2xl border border-dashed relative">
                             <div class="absolute -top-2 left-4 px-2 bg-white text-[9px] font-black text-slate-400 uppercase">Lượt 1: 21 Điểm</div>
                             <div class="flex flex-col gap-3">
-                                <div class="flex justify-between text-[11px] font-bold text-slate-500 px-1">
+                                <div class="flex justify-between text-[10px] font-bold text-slate-500 px-1">
                                     <span class="truncate w-[45%]">${pA1}</span>
                                     <span class="truncate w-[45%] text-right">${pB1}</span>
                                 </div>
@@ -316,7 +316,7 @@
                         <div class="bg-red-50/30 p-4 rounded-2xl border-2 border-red-100 relative">
                             <div class="absolute -top-2 left-4 px-2 bg-red-600 text-[9px] font-black text-white rounded-full uppercase">Lượt 2: 42 Điểm</div>
                             <div class="flex flex-col gap-3">
-                                <div class="flex justify-between text-[11px] font-black text-red-800 px-1">
+                                <div class="flex justify-between text-[10px] font-black text-red-800 px-1">
                                     <span class="truncate w-[45%]">${pA2}</span>
                                     <span class="truncate w-[45%] text-right">${pB2}</span>
                                 </div>
@@ -338,8 +338,8 @@
             const p2 = PLAYER_NAMES[teamId + '2'] || 'VĐV 2';
             return `
                 <div class="pt-2 border-t border-slate-100 mt-2 space-y-1">
-                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-tight">${teamId}1: ${p1}</p>
-                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-tight">${teamId}2: ${p2}</p>
+                    <p class="text-[9px] text-slate-400 font-bold uppercase tracking-tight">${teamId}1: ${p1}</p>
+                    <p class="text-[9px] text-slate-400 font-bold uppercase tracking-tight">${teamId}2: ${p2}</p>
                 </div>
             `;
         }
