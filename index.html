@@ -42,6 +42,8 @@
         .rr-score-input-sf:focus { background: white; border-color: #ef4444; box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2); }
         .rr-score-input-final { width: 38px; height: 38px; background: #ee0000; color: white; text-align: center; border-radius: 6px; font-family: 'Oswald', sans-serif; font-size: 1.1rem; font-weight: 700; border: none; outline: none; transition: all 0.2s; }
         .rr-score-input-final:focus { background: #b30000; box-shadow: 0 0 0 3px rgba(238, 0, 0, 0.2); }
+        .rr-score-input-bronze { width: 38px; height: 38px; background: #b45309; color: white; text-align: center; border-radius: 6px; font-family: 'Oswald', sans-serif; font-size: 1.1rem; font-weight: 700; border: none; outline: none; transition: all 0.2s; }
+        .rr-score-input-bronze:focus { background: #92400e; box-shadow: 0 0 0 3px rgba(180, 83, 9, 0.2); }
         .rr-player-tag { border-left: 4px solid transparent; transition: all 0.2s; }
         .rr-player-tag.active { border-left-color: #ee0000; background: white; }
         .rr-round-badge { background: #f87171; color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
@@ -407,12 +409,12 @@
                 </div>
                 <hr class="border-slate-200">
                 <div>
-                    <label class="text-xs font-black text-slate-500 uppercase tracking-widest mb-3 block">Sửa tên Vận động viên / Đội</label>
+                    <label class="text-xs font-black text-slate-500 uppercase tracking-widest mb-3 block">Sửa tên Vận động viên / Thêm / Xóa Đội</label>
                     <div id="edit-players-container" class="space-y-4"></div>
                 </div>
             </div>
             <div class="p-4 bg-white border-t border-slate-100 flex flex-wrap gap-3">
-                <button onclick="saveEditedTournament()" class="flex-1 py-3 bg-red-600 text-white font-black uppercase tracking-widest rounded-xl hover:bg-red-700 transition shadow-md">Lưu Thay Đổi</button>
+                <button onclick="saveEditedTournament()" class="flex-1 py-3 bg-red-600 text-white font-black uppercase tracking-widest rounded-xl hover:bg-red-700 transition shadow-md">Lưu Thay Đổi & Xếp Lịch</button>
                 <button onclick="deleteTournament()" class="px-6 py-3 bg-slate-800 text-white font-black uppercase tracking-widest rounded-xl hover:bg-slate-900 transition shadow-md">🗑️ Xóa Giải</button>
                 <button onclick="closeEditModal()" class="px-6 py-3 bg-slate-100 text-slate-600 font-bold uppercase tracking-widest rounded-xl hover:bg-slate-200 transition">Hủy</button>
             </div>
@@ -450,6 +452,10 @@
         };
         window.rrCategories = ['Đôi Nam'];
         window.currentRRCat = 'Đôi Nam';
+
+        // TRẠNG THÁI TẠM THỜI KHI EDIT
+        let editConfig = {};
+        let currentEditCat = null;
 
         function init() {
             if (!tid) {
@@ -515,38 +521,136 @@
             document.getElementById('edit-t-date').value = tournamentInfo.date || '';
             document.getElementById('edit-t-status').value = tournamentInfo.status || 'active';
 
-            let html = '';
-            if (tournamentInfo.format === 'relay') {
-                html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
-                for (let key in PLAYER_NAMES) {
-                    html += `
-                    <div class="flex items-center gap-2 bg-white p-2 rounded-lg border border-slate-200 shadow-sm">
-                        <span class="w-12 text-xs font-black text-red-600 text-center">${key}</span>
-                        <input type="text" id="edit_player_${key}" value="${PLAYER_NAMES[key]}" class="flex-1 px-2 py-1 border border-slate-200 rounded text-sm font-semibold outline-none focus:border-red-500 bg-slate-50 focus:bg-white">
-                    </div>`;
-                }
-                html += '</div>';
-            } else {
-                for (let catKey in PLAYER_NAMES) {
-                    let displayCat = catKey.replace('team_', '').replace('_', ' Bảng '); 
-                    html += `<h5 class="text-xs font-black text-slate-800 bg-slate-200 px-3 py-1 rounded inline-block mb-2 mt-4">${displayCat}</h5>`;
-                    html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">';
-                    PLAYER_NAMES[catKey].forEach((team, idx) => {
-                        html += `
-                        <div class="flex items-center gap-2 bg-white p-2 rounded-lg border border-slate-200 shadow-sm">
-                            <span class="w-16 text-xs font-black text-red-600 text-center">${team.id}</span>
-                            <input type="text" id="edit_player_${catKey}_${idx}" value="${team.name}" class="flex-1 px-2 py-1 border border-slate-200 rounded text-sm font-semibold outline-none focus:border-red-500 bg-slate-50 focus:bg-white">
-                        </div>`;
-                    });
-                    html += '</div>';
-                }
+            // Khởi tạo state editConfig độc lập với dữ liệu gốc để thoải mái Thêm/Xóa trước khi bấm Lưu
+            editConfig = JSON.parse(JSON.stringify(PLAYER_NAMES || {}));
+            
+            if (tournamentInfo.format !== 'relay') {
+                let cats = window.rrCategories || [];
+                if (!currentEditCat && cats.length > 0) currentEditCat = cats[0];
             }
-            document.getElementById('edit-players-container').innerHTML = html;
+
+            renderEditPlayers();
         }
 
         function closeEditModal() {
             document.getElementById('edit-tournament-modal').classList.add('hidden');
             document.getElementById('edit-tournament-modal').classList.remove('flex');
+        }
+
+        function renderEditPlayers() {
+            let html = '';
+            const container = document.getElementById('edit-players-container');
+
+            if (tournamentInfo.format === 'relay') {
+                let groups = {};
+                Object.keys(editConfig).forEach(k => {
+                    let g = k.charAt(0);
+                    let t = k.substring(0, k.length - 1);
+                    if(!groups[g]) groups[g] = new Set();
+                    groups[g].add(t);
+                });
+                
+                Object.keys(groups).sort().forEach(g => {
+                    html += `<div class="bg-slate-50 p-4 rounded-xl mb-4 border border-slate-200">
+                        <div class="flex justify-between items-center mb-3">
+                            <h5 class="font-black text-slate-800 uppercase">BẢNG ${g}</h5>
+                            <button type="button" onclick="addEditTeamRelay('${g}')" class="px-3 py-1 bg-slate-800 text-white text-[10px] font-bold uppercase rounded hover:bg-slate-700 transition">+ Thêm Đội</button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">`;
+                    
+                    Array.from(groups[g]).sort().forEach(tId => {
+                        html += `<div class="bg-white p-3 rounded-lg border border-slate-200 relative group/team shadow-sm">
+                            <button type="button" onclick="removeEditTeamRelay('${tId}')" class="absolute top-2 right-2 w-6 h-6 flex items-center justify-center bg-red-100 text-red-600 rounded-full text-[10px] hover:bg-red-200 opacity-0 group-hover/team:opacity-100 transition">✕</button>
+                            <span class="text-[10px] font-black text-red-600 mb-2 block uppercase tracking-widest">ĐỘI ${tId}</span>
+                            <input type="text" value="${editConfig[tId+'1'] || ''}" onchange="updateEditConfig('${tId}1', this.value)" class="w-full px-2 py-1.5 mb-2 border border-slate-200 rounded text-xs outline-none focus:border-red-500" placeholder="Cặp 1 (VD: VĐV1 & VĐV2)">
+                            <input type="text" value="${editConfig[tId+'2'] || ''}" onchange="updateEditConfig('${tId}2', this.value)" class="w-full px-2 py-1.5 border border-slate-200 rounded text-xs outline-none focus:border-red-500" placeholder="Cặp 2 (VD: VĐV3 & VĐV4)">
+                        </div>`;
+                    });
+                    html += `</div></div>`;
+                });
+            } else {
+                let cats = window.rrCategories || [];
+                if (cats.length > 0) {
+                    html += `<div class="flex gap-2 mb-4 border-b border-slate-200 pb-2 overflow-x-auto scrollbar-hide">`;
+                    cats.forEach(c => {
+                        html += `<button type="button" onclick="changeEditModalCat('${c}')" class="whitespace-nowrap px-4 py-2 text-sm font-bold rounded-lg transition-colors ${currentEditCat === c ? 'bg-red-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">${c}</button>`;
+                    });
+                    html += `</div>`;
+
+                    let catAbbr = currentEditCat === 'Đôi Nam' ? 'MD' : (currentEditCat === 'Đôi Nữ' ? 'WD' : 'XD');
+                    let groups = [];
+                    Object.keys(editConfig).forEach(k => {
+                        if (k.startsWith(`team_${catAbbr}_`)) {
+                            groups.push(k.replace(`team_${catAbbr}_`, ''));
+                        }
+                    });
+                    groups.sort();
+
+                    groups.forEach(g => {
+                        let teamKey = `team_${catAbbr}_${g}`;
+                        html += `<div class="bg-slate-50 p-4 rounded-xl mb-4 border border-slate-200">
+                            <div class="flex justify-between items-center mb-3">
+                                <h5 class="font-black text-slate-800 uppercase">BẢNG ${g}</h5>
+                                <button type="button" onclick="addEditTeamRR('${teamKey}', '${catAbbr}', '${g}')" class="px-3 py-1 bg-slate-800 text-white text-[10px] font-bold uppercase rounded hover:bg-slate-700 transition">+ Thêm Đội</button>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">`;
+                        
+                        (editConfig[teamKey] || []).forEach((team, idx) => {
+                            html += `<div class="bg-white p-2 rounded-lg border border-slate-200 relative flex items-center gap-2 group/team shadow-sm">
+                                <span class="w-12 text-[10px] font-black text-red-600 text-center">${team.id}</span>
+                                <input type="text" value="${team.name}" onchange="updateEditConfigRR('${teamKey}', ${idx}, this.value)" class="flex-1 px-2 py-1.5 border border-slate-200 rounded text-xs outline-none focus:border-red-500" placeholder="Tên Đội (VD: VĐV1 & VĐV2)">
+                                <button type="button" onclick="removeEditTeamRR('${teamKey}', ${idx})" class="w-6 h-6 flex items-center justify-center bg-red-100 text-red-600 rounded-full text-[10px] hover:bg-red-200 opacity-0 group-hover/team:opacity-100 shrink-0 transition">✕</button>
+                            </div>`;
+                        });
+                        html += `</div></div>`;
+                    });
+                }
+            }
+            container.innerHTML = html;
+        }
+
+        function changeEditModalCat(cat) {
+            currentEditCat = cat;
+            renderEditPlayers();
+        }
+
+        function updateEditConfig(key, val) { editConfig[key] = val; }
+        function updateEditConfigRR(teamKey, idx, val) { editConfig[teamKey][idx].name = val; }
+
+        function addEditTeamRelay(group) {
+            let maxIdx = 0;
+            Object.keys(editConfig).forEach(k => {
+                if (k.startsWith(group)) {
+                    let num = parseInt(k.substring(1, k.length-1));
+                    if (num > maxIdx) maxIdx = num;
+                }
+            });
+            let nextId = `${group}${maxIdx + 1}`;
+            editConfig[`${nextId}1`] = '';
+            editConfig[`${nextId}2`] = '';
+            renderEditPlayers();
+        }
+
+        function removeEditTeamRelay(teamId) { 
+            delete editConfig[`${teamId}1`];
+            delete editConfig[`${teamId}2`];
+            renderEditPlayers();
+        }
+
+        function addEditTeamRR(teamKey, catAbbr, group) {
+            let teams = editConfig[teamKey] || [];
+            let maxIdx = 0;
+            teams.forEach(t => {
+                let num = parseInt(t.id.replace(`${catAbbr}_${group}`, ''));
+                if (num > maxIdx) maxIdx = num;
+            });
+            teams.push({ id: `${catAbbr}_${group}${maxIdx + 1}`, name: '' });
+            renderEditPlayers();
+        }
+
+        function removeEditTeamRR(teamKey, idx) {
+            editConfig[teamKey].splice(idx, 1);
+            renderEditPlayers();
         }
 
         function saveEditedTournament() {
@@ -556,37 +660,54 @@
             
             if(!newName) { alert('Tên giải đấu không được để trống!'); return; }
 
-            let newPlayers = {};
+            const confirmMsg = "CẢNH BÁO: Việc Thêm hoặc Xóa Đội sẽ làm TẠO LẠI TOÀN BỘ LỊCH THI ĐẤU và có thể MẤT ĐIỂM SỐ của các trận bị ảnh hưởng. Các thao tác chỉ Đổi tên thì an toàn.\n\nBạn có chắc chắn muốn Lưu?";
+            if(!confirm(confirmMsg)) return;
+
+            let newSchedule = schedule; 
+
             if (tournamentInfo.format === 'relay') {
-                for (let key in PLAYER_NAMES) {
-                    newPlayers[key] = document.getElementById(`edit_player_${key}`).value;
-                }
+                let groupsData = [];
+                let groups = {};
+                Object.keys(editConfig).forEach(k => {
+                    let g = k.charAt(0);
+                    let t = k.substring(0, k.length - 1);
+                    if(!groups[g]) groups[g] = new Set();
+                    groups[g].add(t);
+                });
+                Object.keys(groups).sort().forEach(g => {
+                    groupsData.push({ group: g, teams: Array.from(groups[g]).sort() });
+                });
+                newSchedule = generateRelaySchedule(groupsData);
             } else {
-                for (let catKey in PLAYER_NAMES) {
-                    newPlayers[catKey] = [];
-                    PLAYER_NAMES[catKey].forEach((team, idx) => {
-                        newPlayers[catKey].push({
-                            id: team.id,
-                            name: document.getElementById(`edit_player_${catKey}_${idx}`).value
-                        });
+                newSchedule = {};
+                window.rrCategories.forEach(cat => {
+                    let catAbbr = cat === 'Đôi Nam' ? 'MD' : (cat === 'Đôi Nữ' ? 'WD' : 'XD');
+                    let groupsData = [];
+                    let catTeamKeys = Object.keys(editConfig).filter(k => k.startsWith(`team_${catAbbr}_`));
+                    catTeamKeys.sort().forEach(teamKey => {
+                        let g = teamKey.replace(`team_${catAbbr}_`, '');
+                        let teams = editConfig[teamKey].map(t => t.id);
+                        groupsData.push({ group: g, teams: teams });
                     });
-                }
+                    newSchedule[cat] = generateRRSchedule(groupsData, catAbbr);
+                });
             }
 
             database.ref('tournaments/' + tid + '/info/name').set(newName);
             database.ref('tournaments/' + tid + '/info/date').set(newDate);
             database.ref('tournaments/' + tid + '/info/status').set(newStatus);
-            database.ref('tournaments/' + tid + '/players').set(newPlayers).then(() => {
-                alert("Cập nhật thành công!");
+            database.ref('tournaments/' + tid + '/players').set(editConfig);
+            database.ref('tournaments/' + tid + '/schedule').set(newSchedule).then(() => {
+                alert("Cập nhật dữ liệu & Xếp lại lịch thành công!");
                 location.reload(); 
             }).catch(e => alert("Lỗi: " + e));
         }
 
         function deleteTournament() {
             if (!tid) return;
-            const confirmMsg = "CẢNH BÁO: Bạn có chắc chắn muốn XÓA HOÀN TOÀN giải đấu này không?\\nToàn bộ thông tin, đội thi đấu và điểm số sẽ bị xóa vĩnh viễn!";
+            const confirmMsg = "CẢNH BÁO TỐI CAO: Bạn có chắc chắn muốn XÓA HOÀN TOÀN giải đấu này không?\\nToàn bộ thông tin, đội thi đấu và điểm số sẽ bị XÓA VĨNH VIỄN!";
             if (confirm(confirmMsg)) {
-                const verify = prompt("Vui lòng gõ chữ 'XOA' (viết hoa không dấu) để xác nhận:");
+                const verify = prompt("Vui lòng gõ chữ 'XOA' (viết hoa không dấu) để xác nhận hành động này:");
                 if (verify === 'XOA') {
                     database.ref('tournaments/' + tid).remove().then(() => {
                         alert("Đã xóa giải đấu thành công!");
@@ -825,7 +946,7 @@
                 });
                 newTournament.schedule = generateRelaySchedule(groupsData);
             } else if (format === 'round_robin') {
-                newTournament.info.categories = Object.keys(formConfig); // Lưu chuẩn mảng vào info
+                newTournament.info.categories = Object.keys(formConfig);
                 newTournament.players = {};
                 newTournament.schedule = {};
 
@@ -863,7 +984,6 @@
                 schedule = data.schedule || (tournamentInfo.format === 'relay' ? [] : {});
                 scores = data.scores || {};
 
-                // Đổi Header để chứa Nút Chỉnh Sửa
                 document.getElementById('header-badge').innerHTML = `
                     <div class="flex justify-end gap-3 items-center">
                         <div class="text-right">
@@ -886,7 +1006,17 @@
                 } else {
                     document.getElementById('round-robin-detail-view').classList.remove('hidden');
                     
-                    window.rrCategories = tournamentInfo.categories || ['Đôi Nam']; // Lấy từ info
+                    let detectedCategories = [];
+                    if (PLAYER_NAMES) {
+                        const keysStr = Object.keys(PLAYER_NAMES).join(',');
+                        if (keysStr.includes('team_MD_')) detectedCategories.push('Đôi Nam');
+                        if (keysStr.includes('team_WD_')) detectedCategories.push('Đôi Nữ');
+                        if (keysStr.includes('team_XD_')) detectedCategories.push('Đôi Nam Nữ');
+                    }
+                    if (detectedCategories.length === 0) detectedCategories = ['Đôi Nam']; 
+
+                    window.rrCategories = tournamentInfo.categories || data.categories || detectedCategories;
+
                     if (!window.rrCategories.includes(window.currentRRCat)) window.currentRRCat = window.rrCategories[0];
                     
                     if (isAdmin) {
