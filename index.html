@@ -914,16 +914,26 @@
             if (teams.length === 0) return [];
             let t = [...teams];
             if (t.length % 2 !== 0) t.push(null);
-            const rounds = [];
+            
             const n = t.length;
+            const rounds = [];
+            const T = t.slice(1); 
+            
             for (let r = 0; r < n - 1; r++) {
                 const matches = [];
-                for (let i = 0; i < n / 2; i++) {
-                    const t1 = t[i]; const t2 = t[n - 1 - i];
-                    if (t1 !== null && t2 !== null) matches.push({ t1, t2 });
+                if (t[0] !== null && T[r] !== null) {
+                    matches.push({ t1: t[0], t2: T[r] });
+                }
+                for (let k = 1; k < n / 2; k++) {
+                    const idx1 = (r + k) % (n - 1);
+                    const idx2 = (r - k + (n - 1)) % (n - 1);
+                    const team1 = T[idx1];
+                    const team2 = T[idx2];
+                    if (team1 !== null && team2 !== null) {
+                        matches.push({ t1: team1, t2: team2 });
+                    }
                 }
                 rounds.push(matches);
-                t.splice(1, 0, t.pop());
             }
             return rounds;
         }
@@ -1275,24 +1285,41 @@
             return `<div class="${classDef} flex items-center justify-center">${val===''?'0':val}</div>`;
         }
 
+        function getRRPlayerName(id) {
+            if (!PLAYER_NAMES) return id;
+            for (const key in PLAYER_NAMES) {
+                if (Array.isArray(PLAYER_NAMES[key])) {
+                    const team = PLAYER_NAMES[key].find(t => t.id === id);
+                    if (team) return team.name;
+                }
+            }
+            return id;
+        }
+
         function renderRRMatches(currentSchedule) {
             const container = document.getElementById('rr-match-list-container');
             const groupStageRounds = currentSchedule.filter(r => typeof r.round === 'number');
             container.innerHTML = groupStageRounds.map(r => `
                 <div class="mb-8">
                     <div class="flex items-center space-x-3 mb-4"><span class="rr-round-badge italic tracking-tighter">Vòng ${r.round}</span><div class="h-px bg-gray-200 flex-1"></div></div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                         ${r.matches.map(m => `
-                            <div class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm hover:border-red-200 transition-colors">
-                                <div class="text-[8px] font-black text-gray-400 mb-2 uppercase">Sân ${m.s}</div>
-                                <div class="flex items-center justify-between">
-                                    <span class="oswald font-black text-sm w-8 text-red-600 text-center shrink-0">${m.t1}</span>
-                                    <div class="flex items-center space-x-2">
+                            <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:border-red-200 transition-colors flex flex-col justify-center">
+                                <div class="text-[9px] font-black text-gray-400 mb-3 uppercase tracking-widest border-b border-gray-50 pb-2">Sân ${m.s}</div>
+                                <div class="flex items-center justify-between w-full gap-3">
+                                    <div class="flex flex-col flex-1 min-w-0 items-start">
+                                        <span class="oswald font-black text-sm text-red-600 bg-red-50 px-2 py-0.5 rounded">${m.t1}</span>
+                                        <span class="text-[11px] font-bold text-gray-700 leading-snug mt-2">${getRRPlayerName(m.t1)}</span>
+                                    </div>
+                                    <div class="flex items-center justify-center space-x-2 shrink-0">
                                         ${createRRInput(m.id, 's1', 'rr-score-input')}
-                                        <span class="text-gray-300 font-bold">:</span>
+                                        <span class="text-gray-300 font-black text-lg">:</span>
                                         ${createRRInput(m.id, 's2', 'rr-score-input')}
                                     </div>
-                                    <span class="oswald font-black text-sm w-8 text-slate-700 text-center shrink-0">${m.t2}</span>
+                                    <div class="flex flex-col flex-1 min-w-0 items-end text-right">
+                                        <span class="oswald font-black text-sm text-slate-700 bg-slate-100 px-2 py-0.5 rounded">${m.t2}</span>
+                                        <span class="text-[11px] font-bold text-gray-700 leading-snug mt-2">${getRRPlayerName(m.t2)}</span>
+                                    </div>
                                 </div>
                             </div>
                         `).join('')}
