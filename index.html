@@ -84,12 +84,17 @@
     </header>
 
     <main id="dashboard-view" class="max-w-4xl mx-auto p-4 mt-6 hidden">
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <h2 class="text-2xl font-black uppercase tracking-tighter text-slate-800">Danh Sách Giải Đấu</h2>
-            <div id="admin-actions" class="hidden flex gap-2">
-                <button onclick="showCreateForm()" class="px-4 py-2 bg-red-600 text-white text-xs font-bold rounded-lg hover:bg-red-700 shadow uppercase tracking-wider">
-                    + Tạo giải đấu mới
+            <div class="flex flex-wrap gap-2">
+                <button id="dashboard-rank-btn" onclick="toggleRankingModal()" class="px-4 py-2 bg-slate-800 text-white text-xs font-bold rounded-lg hover:bg-slate-900 shadow uppercase tracking-wider flex items-center gap-1.5 transition">
+                    🏆 Xem Rank & Chấp Cầu
                 </button>
+                <div id="admin-actions" class="hidden flex gap-2">
+                    <button onclick="showCreateForm()" class="px-4 py-2 bg-red-600 text-white text-xs font-bold rounded-lg hover:bg-red-700 shadow uppercase tracking-wider transition">
+                        + Tạo giải đấu mới
+                    </button>
+                </div>
             </div>
         </div>
         <div id="tournament-list" class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -378,6 +383,41 @@
             <div class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-[#f8f9fa]">
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div class="lg:col-span-8 space-y-3">
+                        <div id="admin-ranking-controls" class="hidden bg-slate-50 p-4 rounded-2xl border border-slate-200 mb-4 shadow-sm flex-col md:flex-row gap-3 items-end">
+                            <div class="flex-1 space-y-1 w-full">
+                                <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider">Tên Vợt thủ</label>
+                                <input type="text" id="new-player-name" placeholder="VD: Binhnv9..." class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs outline-none focus:border-red-500 font-bold">
+                            </div>
+                            <div class="w-full md:w-36 space-y-1">
+                                <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider">Bộ phận / Loại</label>
+                                <select id="new-player-type" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs outline-none focus:border-red-500 font-bold bg-white cursor-pointer">
+                                    <option value="gvm">GVM</option>
+                                    <option value="cntt">CNTT</option>
+                                    <option value="ngoai">Ngoài VTT</option>
+                                </select>
+                            </div>
+                            <div class="w-full md:w-36 space-y-1">
+                                <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider">Rank Ban Đầu</label>
+                                <select id="new-player-rank" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs outline-none focus:border-red-500 font-bold bg-white cursor-pointer">
+                                    <option value="1">1 (Phong trào)</option>
+                                    <option value="4">4 (Tốt)</option>
+                                    <option value="5">5 (Tốt)</option>
+                                    <option value="6">6 (Tốt)</option>
+                                    <option value="7">7 (Khá)</option>
+                                    <option value="8">8 (Khá)</option>
+                                    <option value="10">10 (Trung bình)</option>
+                                    <option value="11">11 (Trung bình)</option>
+                                    <option value="12">12 (Trung bình)</option>
+                                    <option value="13">13 (Biết chơi)</option>
+                                    <option value="14">14 (Biết chơi)</option>
+                                    <option value="15">15 (Biết chơi)</option>
+                                    <option value="19">19 (Mới cầm vợt)</option>
+                                    <option value="20">20 (Mới cầm vợt)</option>
+                                    <option value="21">21 (Mới cầm vợt)</option>
+                                </select>
+                            </div>
+                            <button onclick="addNewPlayerToRank()" class="w-full md:w-auto px-5 py-2.5 bg-red-600 text-white text-xs font-black uppercase rounded-xl hover:bg-red-700 transition shadow shrink-0">Thêm</button>
+                        </div>
                         <div class="flex justify-end gap-4 text-[11px] font-black uppercase tracking-widest mb-2">
                             <span class="text-slate-800">• GVM</span>
                             <span class="text-red-600">• CNTT</span>
@@ -388,22 +428,8 @@
                                 <thead class="bg-slate-800 text-white text-[11px] font-black uppercase tracking-widest">
                                     <tr><th class="px-4 py-3 border-r border-slate-700">Tên Hạng</th><th class="px-4 py-3 border-r border-slate-700 w-16 text-center">Rank</th><th class="px-4 py-3">Danh sách Vợt thủ</th></tr>
                                 </thead>
-                                <tbody class="divide-y divide-slate-100 font-medium">
-                                    <tr class="hover:bg-slate-50"><td class="px-4 py-2 font-bold border-r border-slate-100">Phong trào</td><td class="px-4 py-2 text-center border-r border-slate-100 bg-slate-50 font-black">1</td><td class="px-4 py-2 flex flex-wrap gap-3"><span class="text-red-600 font-bold">Anhnt162</span></td></tr>
-                                    <tr class="hover:bg-slate-50"><td rowspan="3" class="px-4 py-2 font-bold border-r border-slate-100 align-top">Tốt</td><td class="px-4 py-2 text-center border-r border-slate-100 bg-slate-50 font-black">4</td><td class="px-4 py-2 flex flex-wrap gap-3"><span>Gianglq</span><span>Vinhhv4</span></td></tr>
-                                    <tr class="hover:bg-slate-50"><td class="px-4 py-2 text-center border-r border-slate-100 bg-slate-50 font-black border-t border-slate-100">5</td><td class="px-4 py-2 border-t border-slate-100 flex flex-wrap gap-3"><span>Tiemdt</span><span>Huydt77</span></td></tr>
-                                    <tr class="hover:bg-slate-50"><td class="px-4 py-2 text-center border-r border-slate-100 bg-slate-50 font-black border-t border-slate-100">6</td><td class="px-4 py-2 border-t border-slate-100 flex flex-wrap gap-3"><span>Ducna18</span><span>Hainv102</span><span class="text-red-600 font-bold">Namlt24</span><span>Tuanvv6</span></td></tr>
-                                    <tr class="hover:bg-slate-50 border-t-2 border-slate-200"><td rowspan="2" class="px-4 py-2 font-bold border-r border-slate-100 align-top">Khá</td><td class="px-4 py-2 text-center border-r border-slate-100 bg-slate-50 font-black">7</td><td class="px-4 py-2 flex flex-wrap gap-3"><span class="text-red-600 font-bold">Duynq7</span><span>Tuannq11</span></td></tr>
-                                    <tr class="hover:bg-slate-50"><td class="px-4 py-2 text-center border-r border-slate-100 bg-slate-50 font-black border-t border-slate-100">8</td><td class="px-4 py-2 border-t border-slate-100 flex flex-wrap gap-3"><span>Duypd9</span><span>Hungnn146</span><span class="text-blue-600 font-bold">Sangnn11</span><span>Giangnt165</span><span class="text-red-600 font-bold">Thongnv31</span><span class="text-red-600 font-bold">Soncn2</span><span class="text-red-600 font-bold">Hungnvsx</span><span class="text-red-600 font-bold">Tanpn11</span></td></tr>
-                                    <tr class="hover:bg-slate-50 border-t-2 border-slate-200"><td rowspan="3" class="px-4 py-2 font-bold border-r border-slate-100 align-top">Trung bình</td><td class="px-4 py-2 text-center border-r border-slate-100 bg-slate-50 font-black">10</td><td class="px-4 py-2 flex flex-wrap gap-3"><span>Tungnht3</span><span>Vuha13</span><span class="text-red-600 font-bold">Tannm27</span><span class="text-red-600 font-bold">Linhnt223</span></td></tr>
-                                    <tr class="hover:bg-slate-50"><td class="px-4 py-2 text-center border-r border-slate-100 bg-slate-50 font-black border-t border-slate-100">11</td><td class="px-4 py-2 border-t border-slate-100 flex flex-wrap gap-3"><span>Hoangnv294</span><span>Tuanld12</span><span class="text-red-600 font-bold">Minhltt</span><span>Loctv4</span></td></tr>
-                                    <tr class="hover:bg-slate-50"><td class="px-4 py-2 text-center border-r border-slate-100 bg-slate-50 font-black border-t border-slate-100">12</td><td class="px-4 py-2 border-t border-slate-100 flex flex-wrap gap-3"><span>Dungla18</span><span>Quandd7</span><span>Quangnv58</span><span>Lamht2</span><span>Anhhtv1</span><span>Hunglm35</span></td></tr>
-                                    <tr class="hover:bg-slate-50 border-t-2 border-slate-200"><td rowspan="3" class="px-4 py-2 font-bold border-r border-slate-100 align-top">Biết chơi</td><td class="px-4 py-2 text-center border-r border-slate-100 bg-slate-50 font-black">13</td><td class="px-4 py-2 flex flex-wrap gap-3"><span>Phuonghv2</span><span>Hangnt215</span><span>Hainv107</span><span>Truongnd34</span></td></tr>
-                                    <tr class="hover:bg-slate-50"><td class="px-4 py-2 text-center border-r border-slate-100 bg-slate-50 font-black border-t border-slate-100">14</td><td class="px-4 py-2 border-t border-slate-100 flex flex-wrap gap-3"><span>Anhhtt11</span></td></tr>
-                                    <tr class="hover:bg-slate-50"><td class="px-4 py-2 text-center border-r border-slate-100 bg-slate-50 font-black border-t border-slate-100">15</td><td class="px-4 py-2 border-t border-slate-100 flex flex-wrap gap-3"><span>Thoant35</span><span>Huongdm4</span><span class="text-red-600 font-bold">Vanvttv</span><span class="text-red-600 font-bold">Hienctt</span><span>Nguyennd14</span></td></tr>
-                                    <tr class="hover:bg-slate-50 border-t-2 border-slate-200"><td rowspan="3" class="px-4 py-2 font-bold border-r border-slate-100 align-top">Mới cầm vợt</td><td class="px-4 py-2 text-center border-r border-slate-100 bg-slate-50 font-black">19</td><td class="px-4 py-2 flex flex-wrap gap-3"><span>Thientq5</span></td></tr>
-                                    <tr class="hover:bg-slate-50"><td class="px-4 py-2 text-center border-r border-slate-100 bg-slate-50 font-black border-t border-slate-100">20</td><td class="px-4 py-2 border-t border-slate-100 flex flex-wrap gap-3"><span>Vannt114</span></td></tr>
-                                    <tr class="hover:bg-slate-50"><td class="px-4 py-2 text-center border-r border-slate-100 bg-slate-50 font-black border-t border-slate-100">21</td><td class="px-4 py-2 border-t border-slate-100 flex flex-wrap gap-3"><span>Nghiapd8</span><span>Hoaidtt4</span><span>Phuongnt40</span><span>Anhmnq1</span><span>Vyanh21</span></td></tr>
+                                <tbody id="ranking-list-body" class="divide-y divide-slate-100 font-medium">
+                                    <!-- Sẽ được tải động từ Firebase -->
                                 </tbody>
                             </table>
                         </div>
@@ -524,12 +550,224 @@
         let editConfig = {};
         let currentEditCat = null;
 
+        // CẤU HÌNH RANK VẬN ĐỘNG VIÊN
+        let playerRanks = {};
+        const defaultPlayerRanks = {
+            "1": [ { name: "Anhnt162", type: "cntt" } ],
+            "4": [ { name: "Gianglq", type: "gvm" }, { name: "Vinhhv4", type: "gvm" } ],
+            "5": [ { name: "Tiemdt", type: "gvm" }, { name: "Huydt77", type: "gvm" } ],
+            "6": [ { name: "Ducna18", type: "gvm" }, { name: "Hainv102", type: "gvm" }, { name: "Namlt24", type: "cntt" }, { name: "Tuanvv6", type: "gvm" } ],
+            "7": [ { name: "Duynq7", type: "cntt" }, { name: "Tuannq11", type: "gvm" } ],
+            "8": [ { name: "Duypd9", type: "gvm" }, { name: "Hungnn146", type: "gvm" }, { name: "Sangnn11", type: "ngoai" }, { name: "Giangnt165", type: "gvm" }, { name: "Thongnv31", type: "cntt" }, { name: "Soncn2", type: "cntt" }, { name: "Hungnvsx", type: "cntt" }, { name: "Tanpn11", type: "cntt" } ],
+            "10": [ { name: "Tungnht3", type: "gvm" }, { name: "Vuha13", type: "gvm" }, { name: "Tannm27", type: "cntt" }, { name: "Linhnt223", type: "cntt" } ],
+            "11": [ { name: "Hoangnv294", type: "gvm" }, { name: "Tuanld12", type: "gvm" }, { name: "Minhltt", type: "cntt" }, { name: "Loctv4", type: "gvm" } ],
+            "12": [ { name: "Dungla18", type: "gvm" }, { name: "Quandd7", type: "gvm" }, { name: "Quangnv58", type: "gvm" }, { name: "Lamht2", type: "gvm" }, { name: "Anhhtv1", type: "gvm" }, { name: "Hunglm35", type: "gvm" } ],
+            "13": [ { name: "Phuonghv2", type: "gvm" }, { name: "Hangnt215", type: "gvm" }, { name: "Hainv107", type: "gvm" }, { name: "Truongnd34", type: "gvm" } ],
+            "14": [ { name: "Anhhtt11", type: "gvm" } ],
+            "15": [ { name: "Thoant35", type: "gvm" }, { name: "Huongdm4", type: "gvm" }, { name: "Vanvttv", type: "cntt" }, { name: "Hienctt", type: "cntt" }, { name: "Nguyennd14", type: "gvm" } ],
+            "19": [ { name: "Thientq5", type: "gvm" } ],
+            "20": [ { name: "Vannt114", type: "gvm" } ],
+            "21": [ { name: "Nghiapd8", type: "gvm" }, { name: "Hoaidtt4", type: "gvm" }, { name: "Phuongnt40", type: "gvm" }, { name: "Anhmnq1", type: "gvm" }, { name: "Vyanh21", type: "gvm" } ]
+        };
+
+        const rankGroups = [
+            { name: "Phong trào", ranks: ["1"] },
+            { name: "Tốt", ranks: ["4", "5", "6"] },
+            { name: "Khá", ranks: ["7", "8"] },
+            { name: "Trung bình", ranks: ["10", "11", "12"] },
+            { name: "Biết chơi", ranks: ["13", "14", "15"] },
+            { name: "Mới cầm vợt", ranks: ["19", "20", "21"] }
+        ];
+
+        function renderRankingTable() {
+            const tbody = document.getElementById('ranking-list-body');
+            if (!tbody) return;
+            
+            const adminControls = document.getElementById('admin-ranking-controls');
+            if (adminControls) {
+                if (isAdmin) {
+                    adminControls.classList.remove('hidden');
+                    adminControls.classList.add('flex');
+                } else {
+                    adminControls.classList.add('hidden');
+                    adminControls.classList.remove('flex');
+                }
+            }
+            
+            let html = '';
+            
+            rankGroups.forEach(group => {
+                group.ranks.forEach((rank, idx) => {
+                    const players = playerRanks[rank] || [];
+                    
+                    const playerTagsHtml = players.map(p => {
+                        let textClass = 'text-slate-800';
+                        if (p.type === 'cntt') textClass = 'text-red-600 font-bold';
+                        else if (p.type === 'ngoai') textClass = 'text-blue-600 font-bold';
+                        
+                        return `
+                            <span class="inline-flex items-center gap-1 bg-slate-100 hover:bg-slate-200/80 px-2.5 py-1 rounded-xl text-xs transition duration-150 select-none ${isAdmin ? 'cursor-grab active:cursor-grabbing' : ''}" 
+                                  ${isAdmin ? `draggable="true" ondragstart="onPlayerDragStart(event, '${p.name.replace(/'/g, "\\'")}', '${rank}')" ondragend="onPlayerDragEnd(event)"` : ''}>
+                                <span class="${textClass}">${p.name}</span>
+                                ${isAdmin ? `<button onclick="deletePlayerFromRank('${p.name.replace(/'/g, "\\'")}', '${rank}')" class="text-slate-400 hover:text-red-600 font-bold ml-1 transition" title="Xóa">✕</button>` : ''}
+                            </span>
+                        `;
+                    }).join('');
+                    
+                    html += `<tr class="hover:bg-slate-50/50 transition-colors">`;
+                    
+                    if (idx === 0) {
+                        html += `<td rowspan="${group.ranks.length}" class="px-4 py-3 font-bold border-r border-slate-100 align-top text-slate-700 bg-slate-50/30">${group.name}</td>`;
+                    }
+                    
+                    const borderTopClass = idx > 0 ? 'border-t border-slate-100' : '';
+                    html += `<td class="px-4 py-3 text-center border-r border-slate-100 bg-slate-50 font-black text-slate-600 ${borderTopClass}">${rank}</td>`;
+                    
+                    html += `
+                        <td class="px-4 py-3 ${borderTopClass} flex flex-wrap gap-2.5 min-h-[44px]"
+                            ${isAdmin ? `ondragover="onRankDragOver(event)" ondragenter="onRankDragEnter(event)" ondragleave="onRankDragLeave(event)" ondrop="onRankDrop(event, '${rank}')"` : ''}>
+                            ${playerTagsHtml || `<span class="text-[10px] text-slate-300 italic font-bold">Trống</span>`}
+                        </td>
+                    `;
+                    
+                    html += `</tr>`;
+                });
+            });
+            
+            tbody.innerHTML = html;
+        }
+
+        let draggedPlayer = null;
+        let draggedFromRank = null;
+
+        function onPlayerDragStart(e, playerName, rank) {
+            draggedPlayer = playerName;
+            draggedFromRank = rank;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', playerName);
+            e.currentTarget.classList.add('opacity-40');
+        }
+
+        function onPlayerDragEnd(e) {
+            e.currentTarget.classList.remove('opacity-40');
+            draggedPlayer = null;
+            draggedFromRank = null;
+        }
+
+        function onRankDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+
+        function onRankDragEnter(e) {
+            e.currentTarget.classList.add('bg-red-50/50');
+        }
+
+        function onRankDragLeave(e) {
+            e.currentTarget.classList.remove('bg-red-50/50');
+        }
+
+        function onRankDrop(e, targetRank) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('bg-red-50/50');
+            
+            if (!draggedPlayer || !draggedFromRank || draggedFromRank === targetRank) return;
+            
+            const sourcePlayers = playerRanks[draggedFromRank] || [];
+            const playerIndex = sourcePlayers.findIndex(p => p.name === draggedPlayer);
+            
+            if (playerIndex > -1) {
+                const playerObj = sourcePlayers[playerIndex];
+                sourcePlayers.splice(playerIndex, 1);
+                
+                if (!playerRanks[targetRank]) playerRanks[targetRank] = [];
+                playerRanks[targetRank].push(playerObj);
+                
+                database.ref('rankings').set(playerRanks);
+            }
+        }
+
+        function addNewPlayerToRank() {
+            const nameInput = document.getElementById('new-player-name');
+            const typeSelect = document.getElementById('new-player-type');
+            const rankSelect = document.getElementById('new-player-rank');
+            
+            if (!nameInput || !typeSelect || !rankSelect) return;
+            
+            const name = nameInput.value.trim();
+            const type = typeSelect.value;
+            const rank = rankSelect.value;
+            
+            if (!name) {
+                alert("Vui lòng nhập tên vợt thủ!");
+                return;
+            }
+            
+            let exists = false;
+            Object.keys(playerRanks).forEach(r => {
+                if (playerRanks[r].some(p => p.name.toLowerCase() === name.toLowerCase())) {
+                    exists = true;
+                }
+            });
+            
+            if (exists) {
+                alert(`Vợt thủ "${name}" đã tồn tại trong hệ thống rank!`);
+                return;
+            }
+            
+            if (!playerRanks[rank]) playerRanks[rank] = [];
+            playerRanks[rank].push({ name: name, type: type });
+            
+            database.ref('rankings').set(playerRanks).then(() => {
+                nameInput.value = '';
+            }).catch(err => {
+                alert("Lỗi khi thêm vợt thủ: " + err);
+            });
+        }
+
+        function deletePlayerFromRank(playerName, rank) {
+            if (!confirm(`Bạn có chắc chắn muốn xóa vợt thủ "${playerName}" khỏi hệ thống rank?`)) return;
+            
+            const players = playerRanks[rank] || [];
+            const index = players.findIndex(p => p.name === playerName);
+            
+            if (index > -1) {
+                players.splice(index, 1);
+                database.ref('rankings').set(playerRanks);
+            }
+        }
+
         function init() {
+            // Listen for rankings changes
+            database.ref('rankings').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (!data) {
+                    database.ref('rankings').set(defaultPlayerRanks);
+                    playerRanks = JSON.parse(JSON.stringify(defaultPlayerRanks));
+                } else {
+                    playerRanks = data;
+                }
+                renderRankingTable();
+            });
+
             if (!tid) {
                 document.getElementById('dashboard-view').classList.remove('hidden');
                 document.getElementById('back-btn-container').classList.add('hidden');
                 document.getElementById('ranking-icon-container').classList.add('hidden');
                 document.getElementById('header-subtitle').innerText = "Tournament Portal";
+                
+                // Cập nhật nội dung nút Rank ngoài trang chủ dựa trên quyền Admin
+                const dbRankBtn = document.getElementById('dashboard-rank-btn');
+                if (dbRankBtn) {
+                    if (isAdmin) {
+                        dbRankBtn.innerHTML = "⚙️ Quản lý Rank & Chấp Cầu";
+                        dbRankBtn.className = "px-4 py-2 bg-slate-800 text-yellow-300 text-xs font-bold rounded-lg hover:bg-slate-900 hover:text-yellow-400 shadow uppercase tracking-wider flex items-center gap-1.5 transition";
+                    } else {
+                        dbRankBtn.innerHTML = "🏆 Xem Rank & Chấp Cầu";
+                        dbRankBtn.className = "px-4 py-2 bg-slate-800 text-white text-xs font-bold rounded-lg hover:bg-slate-900 shadow uppercase tracking-wider flex items-center gap-1.5 transition";
+                    }
+                }
+                
                 if (isAdmin) document.getElementById('admin-actions').classList.remove('hidden');
                 loadDashboard();
             } else {
@@ -1102,10 +1340,10 @@
                     </div>
                 `;
                 document.getElementById('header-subtitle').innerText = tournamentInfo.name;
+                document.getElementById('ranking-icon-container').classList.remove('hidden');
 
                 if (tournamentInfo.format === 'relay') {
                     document.getElementById('relay-detail-view').classList.remove('hidden');
-                    document.getElementById('ranking-icon-container').classList.remove('hidden');
                     if (isAdmin) {
                         document.getElementById('relay-live-status-indicator').innerHTML = `<span class="dot"></span> ADMIN MODE`;
                         document.getElementById('relay-live-status-indicator').classList.add('bg-yellow-100', 'text-yellow-700');
